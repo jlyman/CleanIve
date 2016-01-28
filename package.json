@@ -1,0 +1,16 @@
+{
+  "name": "clean-ive",
+  "version": "1.0.0",
+  "description": "Twitter bot to clean up the @JonyIveParody account",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Joshua Lyman",
+  "license": "MIT",
+  "dependencies": {
+    "profanity-middleware": "^0.2.1",
+    "twitter": "^1.2.5",
+    "yargs": "^3.32.0"
+  }
+}
