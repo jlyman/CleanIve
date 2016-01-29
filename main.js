@@ -1,5 +1,3 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED="0";
-
 var fs = require('fs');
 var Twitter = require('twitter');
 var profanity = require('profanity-middleware');
@@ -11,8 +9,13 @@ var argv = require('yargs')
 
 // Check that we got the arguments we need
 
+var lastSeenId;
+try {
+	lastSeenId = fs.readFileSync('lastSeenId', 'utf-8');	
+} catch (ex) {
+	console.log('No last seen ID on record, will default and create a new file.');
+}
 
-var lastSeenId = fs.readFileSync('lastSeenId', 'utf-8');
 if (!lastSeenId) lastSeenId = 686606848116445200;
 var newLastSeenId = lastSeenId;
 
@@ -25,7 +28,7 @@ var client = new Twitter({
 
 client.get('statuses/user_timeline', { 
 	'user_id': '1197619002', 
-	count: 8, 
+	count: 10, 
 	'exclude_replies': true, 
 	'include_rts': false, 
 	'trim_user': true,
@@ -35,11 +38,25 @@ client.get('statuses/user_timeline', {
 		console.error('Have a problem:', err);
 		throw err;
 	}
-	tweets.forEach(tweet => {
+	tweets.reverse().forEach(tweet => {
+		if (tweet.id == lastSeenId) {
+			// Twitter will still give you a tweet that you've already seen even if you request since_id, and we don't want to post a duplicate.
+			return;
+		}
+
 		if (tweet.id > newLastSeenId) newLastSeenId = tweet.id;
 
-		//console.log(tweet.id);
 		console.log(filter(tweet.text));
+
+		client.post('statuses/update', {
+			'status': filter(tweet.text)
+		}, function(err, tweet, res) {
+			if (err) {
+				console.warn('Problem posting tweet.', err);
+			} else {
+				console.log('Posted tweet.');
+			}
+		});
 	});	
 	fs.writeFileSync('lastSeenId', newLastSeenId);
 });
