@@ -48,15 +48,31 @@ client.get('statuses/user_timeline', {
 
 		console.log(filter(tweet.text));
 
-		client.post('statuses/update', {
-			'status': filter(tweet.text)
-		}, function(err, tweet, res) {
-			if (err) {
-				console.warn('Problem posting tweet.', err);
-			} else {
-				console.log('Posted tweet.');
-			}
-		});
+		if (tweet.text == filter(tweet.text)) {
+			// No need to clean up, just retweet the original
+			console.log('## No change, retweeting...');
+			client.post('statuses/retweet/' + tweet.id, function(err, tweet, res) {
+				if (err) {
+					console.warn('Problem retweeting tweet.', err);
+				} else {
+					console.log('Retweeted tweet.');
+				}
+			});
+		} else {
+			// Cleaned up, so put out a new tweet
+			console.log('## Cleaned up, new tweet...');
+			client.post('statuses/update', {
+				'status': filter(tweet.text)
+			}, function(err, tweet, res) {
+				if (err) {
+					console.warn('Problem posting tweet.', err);
+				} else {
+					console.log('Posted tweet.');
+				}
+			});
+		}
+
+		
 	});	
 	fs.writeFileSync('lastSeenId', newLastSeenId);
 });
