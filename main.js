@@ -39,19 +39,19 @@ client.get('statuses/user_timeline', {
 		throw err;
 	}
 	tweets.reverse().forEach(tweet => {
-		if (tweet.id == lastSeenId) {
+		if (tweet.id_str == lastSeenId) {
 			// Twitter will still give you a tweet that you've already seen even if you request since_id, and we don't want to post a duplicate.
 			return;
 		}
 
-		if (tweet.id > newLastSeenId) newLastSeenId = tweet.id;
+		if (tweet.id_str > newLastSeenId) newLastSeenId = tweet.id_str;
 
 		console.log(filter(tweet.text, { fullyMasked: true }));
 
 		if (tweet.text == filter(tweet.text, { fullyMasked: true })) {
 			// No need to clean up, just retweet the original
 			console.log('## No change, retweeting...');
-			client.post('statuses/retweet/' + tweet.id, function(err, tweet, res) {
+			client.post('statuses/retweet/' + tweet.id_str, function(err, tweet, res) {
 				if (err) {
 					console.warn('Problem retweeting tweet.', err);
 				} else {
