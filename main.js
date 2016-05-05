@@ -46,9 +46,9 @@ client.get('statuses/user_timeline', {
 
 		if (tweet.id > newLastSeenId) newLastSeenId = tweet.id;
 
-		console.log(filter(tweet.text));
+		console.log(filter(tweet.text, { fullyMasked: true }));
 
-		if (tweet.text == filter(tweet.text)) {
+		if (tweet.text == filter(tweet.text, { fullyMasked: true })) {
 			// No need to clean up, just retweet the original
 			console.log('## No change, retweeting...');
 			client.post('statuses/retweet/' + tweet.id, function(err, tweet, res) {
@@ -62,7 +62,7 @@ client.get('statuses/user_timeline', {
 			// Cleaned up, so put out a new tweet
 			console.log('## Cleaned up, new tweet...');
 			client.post('statuses/update', {
-				'status': filter(tweet.text)
+				'status': filter(tweet.text, { fullyMasked: true })
 			}, function(err, tweet, res) {
 				if (err) {
 					console.warn('Problem posting tweet.', err);

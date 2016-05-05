@@ -9,7 +9,7 @@
   "author": "Joshua Lyman",
   "license": "MIT",
   "dependencies": {
-    "profanity-middleware": "^0.2.1",
+    "profanity-middleware": "^0.3.0",
     "twitter": "^1.2.5",
     "yargs": "^3.32.0"
   }
