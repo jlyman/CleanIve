@@ -2,6 +2,7 @@ var fs = require('fs');
 var Twitter = require('twitter');
 var profanity = require('profanity-middleware');
 var filter = profanity.filter;
+var bigInt = require('big-integer');
 var argv = require('yargs')
 		.usage('Usage: --consumer-key=[key] --consumer-secret=[key] --access-token-key=[key] --access-token-secret=[key]')
 		.demand(['consumer-key', 'consumer-secret', 'access-token-key', 'access-token-secret'])
@@ -11,12 +12,12 @@ var argv = require('yargs')
 
 var lastSeenId;
 try {
-	lastSeenId = fs.readFileSync('lastSeenId', 'utf-8');	
+	lastSeenId = bigInt(fs.readFileSync('lastSeenId', 'utf-8'));	
 } catch (ex) {
 	console.log('No last seen ID on record, will default and create a new file.');
 }
 
-if (!lastSeenId) lastSeenId = 686606848116445200;
+if (!lastSeenId) lastSeenId = bigInt('686606848116445200');
 var newLastSeenId = lastSeenId;
 
 var client = new Twitter({
@@ -32,26 +33,27 @@ client.get('statuses/user_timeline', {
 	'exclude_replies': true, 
 	'include_rts': false, 
 	'trim_user': true,
-	'since_id': lastSeenId
+	'since_id': lastSeenId.toString(),
 }, function (err, tweets, res) {
 	if (err) {
 		console.error('Have a problem:', err);
 		throw err;
 	}
 	tweets.reverse().forEach(tweet => {
-		if (tweet.id_str == lastSeenId) {
+		var thisTweetId = bigInt(tweet.id_str);
+		if (thisTweetId.equals(lastSeenId)) {
 			// Twitter will still give you a tweet that you've already seen even if you request since_id, and we don't want to post a duplicate.
 			return;
 		}
 
-		if (tweet.id_str > newLastSeenId) newLastSeenId = tweet.id_str;
+		if (thisTweetId.greater(newLastSeenId)) newLastSeenId = thisTweetId;
 
 		console.log(filter(tweet.text, { fullyMasked: true }));
 
 		if (tweet.text == filter(tweet.text, { fullyMasked: true })) {
 			// No need to clean up, just retweet the original
 			console.log('## No change, retweeting...');
-			client.post('statuses/retweet/' + tweet.id_str, function(err, tweet, res) {
+			client.post('statuses/retweet/' + thisTweetId.toString(), function(err, tweet, res) {
 				if (err) {
 					console.warn('Problem retweeting tweet.', err);
 				} else {
@@ -74,5 +76,5 @@ client.get('statuses/user_timeline', {
 
 		
 	});	
-	fs.writeFileSync('lastSeenId', newLastSeenId);
+	fs.writeFileSync('lastSeenId', newLastSeenId.toString());
 });
